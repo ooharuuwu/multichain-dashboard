@@ -1,0 +1,32 @@
+
+body {
+    font-family: sans-serif;
+    padding: 2rem;
+    background: #f8ffc4;
+}
+
+#pool-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-top: 30px;
+}
+.pool-card{
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    text-align:center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor:pointer;
+    gap: 1px;;
+}
+.pool-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+.pool-card h3 {
+    margin-top: 0;
+    font-size: 1.2rem;
+}
+

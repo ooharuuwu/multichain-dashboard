@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "calculate.html" %}
 
 {% block title %}
     ReturnsGraph
@@ -6,14 +6,52 @@
 
 {% block main %}
 <div class = "container">
-    <h2>Retruns Graph</h2>
-    
+    <h2>Projected Returns for : {{ name }} | {{ symbol }}</h2>
+    <p>Initial Investment : ${{amount}}</p>
+    <p>APY: {{ apy }}%</p>
+
+    <canvas id="returnsChart" width="800" height="400"></canvas>
+</div>
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
-<script>    
-    
-</script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+    <script>    
+        const data = {{ datapoints | tojson}};
+        const labels = data.map(d => d.year);
+        const values = data.map(d => d.value);
+
+        const ctx = document.getElementById('returnsChart').getContext('2d');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Portfolio value ($)',
+                    data: values,
+                    borderColor: 'orange',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    tooltip: {
+                        enabled: true
+                    }
+                },
+                scales : {
+                y: {title: {display: true, text: 'Value in $'}},
+                x: {title: {display: true, text: 'Year'}}
+                }
+            }
+        })
+    </script>
 {% endblock %}
 

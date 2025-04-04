@@ -4,8 +4,6 @@ from flask import Flask, render_template, request
 app = Flask(__name__)
 
 url = "https://yields.llama.fi/pools"
-response = requests.get(url)
-
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -26,6 +24,8 @@ def graph(pool_id):
 
     final = historical_data(pool_id)
 
+    response = requests.get("https://yields.llama.fi/pools")
+
     if response.status_code == 200:
         data = response.json()
         for pool in data["data"]:
@@ -39,13 +39,17 @@ def graph(pool_id):
 
 @app.route("/calculate", methods=["GET", "POST"])
 def calculate():
-    
+
+    response = requests.get("https://yields.llama.fi/pools")
+
     protocols = []
 
     if response.status_code == 200:
         data = response.json()
         for pool in data["data"]:
             protocols.append(pool)
+        
+        protocols.sort(key=lambda p: p.get("project", "").lower())
     else:
         protocols = []
 
@@ -57,12 +61,16 @@ def returns():
     pool_id = request.form.get("protocol")
     years = int(request.form.get("duration"))
 
+    response = requests.get("https://yields.llama.fi/pools")
+
     apy = 0 
     data = response.json()
 
     for pool in data["data"]:
         if pool_id == pool["pool"]:
             apy = pool["apy"]
+            name = pool["project"]
+            symbol = pool["symbol"]
             break
     
     datapoints = []
@@ -71,15 +79,14 @@ def returns():
         value = value* (1 + apy / 100)
         datapoints.append({"year": year, "value": round(value,2)})
 
-    return render_template("returnsgraph.html", amount = amount, apy=apy, datapoints=datapoints)
+    return render_template("returnsgraph.html", amount = amount, apy=apy, name =name, symbol= symbol, datapoints=datapoints)
         
-
-
-
 
 def blocks(chain):
 
     pools = []
+
+    response = requests.get("https://yields.llama.fi/pools")
 
     if response.status_code == 200:
         data = response.json()
@@ -92,6 +99,8 @@ def blocks(chain):
         
 
 def historical_data(pool_id):
+
+
     history = []
     historical = f"https://yields.llama.fi/chart/{pool_id}"
     res = requests.get(historical)
@@ -103,21 +112,4 @@ def historical_data(pool_id):
         return history
     else:
         return []
-
-
-
-
-# print(item["project"], "(", item["symbol"], ")" , " : ", 
-
-
-
-
-# Filter for entries on the Solana chain and with USDC as the token
-# if 
-# solana_usdc_yields = [
-#     item for item in data 
-#     if item.get("chain", "").lower() == "solana" and item.get("token", "").upper() == "USDC"
-# ]
-
-# print(solana_usdc_yields)
 

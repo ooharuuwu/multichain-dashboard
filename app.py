@@ -68,11 +68,6 @@ def historical_data(pool_id):
 
 
 
-
-
-
-
-
 # print(item["project"], "(", item["symbol"], ")" , " : ", 
 
 

@@ -7,8 +7,39 @@
 {% block main %}
 <div class = "container">
     <h2>Historical APY for : {{ pool_id }}</h2>
-    <canvas id = "apychart" width= "800" height = "400"></canvas>
+    <h2>Current Apy : {{ current_apy }}</h2>
 
+    <canvas id = "apychart" width= "800" height = "400"></canvas>
 </div>
     
 {% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
+<script>    
+    const historicalData = {{ historical_data | tojson }};
+    const labels = historicalData.map(entry => {
+        const date = new Date(entry.timestamp);
+        return date.toLocaleDateString().split('T')[0];
+        });
+
+    const apyvalues = historicalData.map(entry => entry.apy)
+
+    const ctx = document.getElementById('apychart').getContext('2d');
+
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "APY %",
+                data: apyvalues,
+                borderColor: 'orange',
+                fill: true,
+                tension: 0.2
+            }]
+        }
+    })
+</script>
+{% endblock %}
+

@@ -37,6 +37,45 @@ def graph(pool_id):
     else:
         return render_template("graph.html", pool_id= pool_id, historical_data= [], current_apy = None)
 
+@app.route("/calculate", methods=["GET", "POST"])
+def calculate():
+    
+    protocols = []
+
+    if response.status_code == 200:
+        data = response.json()
+        for pool in data["data"]:
+            protocols.append(pool)
+    else:
+        protocols = []
+
+    return render_template("calculate.html", protocols=protocols)
+
+@app.route("/returns", methods = ["POST"])
+def returns():
+    amount = int(request.form.get("amount"))
+    pool_id = request.form.get("protocol")
+    years = int(request.form.get("duration"))
+
+    apy = 0 
+    data = response.json()
+
+    for pool in data["data"]:
+        if pool_id == pool["pool"]:
+            apy = pool["apy"]
+            break
+    
+    datapoints = []
+    value = amount
+    for year in range(1, years+1):
+        value = value* (1 + apy / 100)
+        datapoints.append({"year": year, "value": round(value,2)})
+
+    return render_template("returnsgraph.html", amount = amount, apy=apy, datapoints=datapoints)
+        
+
+
+
 
 def blocks(chain):
 

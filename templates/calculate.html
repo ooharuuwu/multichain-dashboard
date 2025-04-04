@@ -8,33 +8,19 @@
     <div class="container">
         <h2>Returns Calculator</h2>
 
-        <form action="/calculate" method="POST">
-            <div >
-                <p>Investment Amount</p>
-                <input type = "number" name="amount" required>
-            </div>
-            <br>
-            <br>
+        <div class= "form-row">
+            <form action="/calculate" method="POST" class="form-inline">
 
-            <div >
-                <select name = "protocol" required>
+                <input type = "number" name="amount" required placeholder="Investment Amount">
+                <select name = "protocol" required class="protocol-select">
                     {% for pool in protocols %}
-                        <option value="">{{pool['project']}} | {{pool['symbol']}} : {{ "%.2f"|format(pool['apy']) }} %</option>
+                        <option value="{{ pool['pool']}}">{{pool['project']}} | {{pool['symbol']}} : {{ "%.2f"|format(pool['apy']) }} %</option>
                     {% endfor %}
                 </select>
-            </div>
-
-            <br>
-            <br>
-
-            <div>
-                <p>Duration (Years)</p>
-                <input type = "number" name="duration" required>
-            </div>
-
-            <button type="submit">Calculate</button>
-        </form>
-    
+                <input type = "number" name="duration" required placeholder="Duration (Years)">
+                <button type="submit">Calculate</button>
+            </form>
+        </div>
     </div>
 
 {% endblock %}

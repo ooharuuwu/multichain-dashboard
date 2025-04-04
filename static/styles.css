@@ -30,3 +30,13 @@ body {
     font-size: 1.2rem;
 }
 
+form.form-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+}
+.protocol-select {
+    width: 250px;
+}

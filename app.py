@@ -10,8 +10,16 @@ url = "https://yields.llama.fi/pools"
 def index():
     if request.method == "POST":
         chain = request.form.get("chain").capitalize()
+        sort_by = request.form.get("sort_by", "alphabetical")
 
         data = blocks(chain)
+
+        if sort_by== "apy":
+            data.sort(key=lambda p: p.get("apy", 0), reverse=True)
+        elif sort_by =="tvl":
+            data.sort(key=lambda p: p.get("tvl", 0), reverse=True)
+        else:
+            data.sort(key=lambda p: p.get("project", "").lower())
 
         return render_template("index.html", pools = data)
 
@@ -93,6 +101,7 @@ def blocks(chain):
         for pool in data["data"]:
             if pool["chain"] == chain:
                 pools.append(pool)
+
         return pools
     else:
         return []

@@ -11,16 +11,29 @@
             <div class="section">
 
                 <h2>Search By token</h2>
-                <!-- TODO: Create a form for users to submit a name, a month, and a day -->
-                <form method="POST">
-                    <input name="chain" type="text" placeholder="Filter By Chain" autofocus autocomplete="on">
-                    <button name="submit" type="submit">Submit</button>
-                    
+
+                <form method="POST" id="filter-form">
+                    <input name="chain" type="text" placeholder="Filter By Chain" autofocus autocomplete="on" value="{{ request.form.get('chain', '') }}">
+                    <button type="submit">Submit</button>
+
+                    <br>
+                    <br>
+                    <select name = "sort_by" id="sort-select">
+                        <option value="alphabetical" {% if request.form.get('sort_by') == 'alphabetical' %} selected {% endif %}>Alphabetical (A-Z)</option>
+                        <option value="apy" {% if request.form.get('sort_by') == 'apy' %} selected {% endif %}>APY (High to Low)</option>
+                        <option value="tvl" {% if request.form.get('sort_by') == 'tvl' %} selected {% endif %}>TVL (High to Low)</option>
+                    </select>
+                    <input type="text" id="live-search" placeholder="Search Pool" />
                 </form>
 
+
                 <div id = "pool-list">
+
                     {% for pool in pools %}
-                        <div class = "pool-card" data-pool= "{{ pool['pool'] }}" data-apy = "{{ pool['apy']}}">
+                        <div class = "pool-card" data-pool= "{{ pool['pool'] }}" 
+                                                 data-apy = "{{ pool['apy']}}"
+                                                 data-project = "{{ pool['project'] | lower }}"
+                                                 data-symbol = "{{ pool['symbol'] | lower }}">
                             <h3>{{ pool["project"]}}</h3>
                             <p><strong>Pair: </strong>{{ pool["symbol"]}}</p>
                             <p><strong>APY: </strong>{{  "%.4f"| format(pool["apy"]) }}</p>

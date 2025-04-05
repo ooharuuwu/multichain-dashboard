@@ -40,3 +40,9 @@ form.form-inline {
 .protocol-select {
     width: 250px;
 }
+#live-search{
+    width: 250px;
+    height: 30px;
+    padding: 6px 10px;
+    font-size: 14px;
+}

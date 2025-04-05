@@ -1,15 +1,27 @@
 
+h2 {
+    margin-bottom: 10px;
+}
+  
+form {
+    margin: 0;
+}
+
 body {
     font-family: sans-serif;
     padding: 2rem;
     background: #f8ffc4;
 }
+.container {
+    padding: 0;
+    margin: 0 auto;
+  }
 
 #pool-list {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 1rem;
-    margin-top: 30px;
+    margin-top: 10px;
 }
 .pool-card{
     background: white;
@@ -46,3 +58,16 @@ form.form-inline {
     padding: 6px 10px;
     font-size: 14px;
 }
+#result-count {
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 14px;
+    margin: 0 0 10px 0;
+    text-align: right;
+    color: #000000;
+  }
+  #compare-form {
+    margin-bottom: 20px;
+    gap: 10px;
+    align-items: center;
+  }

@@ -10,6 +10,15 @@
     <p>Initial Investment : ${{amount}}</p>
     <p>APY: {{ apy }}%</p>
 
+    <form id="compare-form">
+        <select id="protocol-select" name="extra-protocol" required class="protocol-select">
+            {% for pool in protocols %}
+                <option value="{{ pool['pool']}}">{{pool['project']}} | {{pool['symbol']}} : {{ "%.2f"|format(pool['apy']) }} %</option>
+            {% endfor %}
+        </select>
+        <button type="button" id = "add-protocol"> Add in Chart</button>    
+    </form>
+
     <canvas id="returnsChart" width="800" height="400"></canvas>
 </div>
 {% endblock %}
@@ -17,18 +26,18 @@
 {% block scripts %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> 
     <script>    
-        const data = {{ datapoints | tojson}};
-        const labels = data.map(d => d.year);
-        const values = data.map(d => d.value);
+        const initialData = {{ datapoints | tojson}};
+        const labels = initialData.map(d => d.year);
+        const values = initialData.map(d => d.value);
 
         const ctx = document.getElementById('returnsChart').getContext('2d');
 
-        new Chart(ctx, {
+        let chart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Portfolio value ($)',
+                    label: "{{ name }} ({{ symbol }})",
                     data: values,
                     borderColor: 'orange',
                     fill: true,
@@ -51,6 +60,36 @@
                 x: {title: {display: true, text: 'Year'}}
                 }
             }
+        })
+
+        const colorList = ['#1f77b4', '#2ca02c', '#ff7f0e', '#d62728', '#9467bd'];
+        let colorIndex = 0;
+
+        document.getElementById('add-protocol').addEventListener('click', function() {
+            const select = document.getElementById('protocol-select');
+            const poolId = select.value;
+            const label = select.options[select.selectedIndex].text;
+
+            if(chart.data.datasets.length >=5){
+                alert("You can only compare 5 protocols")
+                return
+            }
+            fetch(`/graph_data/${poolId}?amount={{ amount }}&years={{ datapoints | length }}`)
+            .then (res =>res.json())
+            .then(data => {
+                chart.data.datasets.push({
+                    label: label,
+                    data: data.map(d => d.value),
+                    borderColor: colorList[colorIndex++ % colorList.length],
+                    fill: false,
+                    tension: 0.3
+                })  
+                chart.update({
+                duration: 1000,      
+                easing: 'easeOutQuad' 
+                });
+            })
+
         })
     </script>
 {% endblock %}

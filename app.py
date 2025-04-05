@@ -1,5 +1,5 @@
 import requests
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
@@ -81,14 +81,52 @@ def returns():
             symbol = pool["symbol"]
             break
     
+    protocols = []
+
+    if response.status_code == 200:
+        data = response.json()
+        for pool in data["data"]:
+            protocols.append(pool)
+        
+        protocols.sort(key=lambda p: p.get("project", "").lower())
+    else:
+        protocols = []
+
+
     datapoints = []
     value = amount
     for year in range(1, years+1):
         value = value* (1 + apy / 100)
         datapoints.append({"year": year, "value": round(value,2)})
 
-    return render_template("returnsgraph.html", amount = amount, apy=apy, name =name, symbol= symbol, datapoints=datapoints)
+    return render_template("returnsgraph.html", amount = amount, apy=apy, name =name, symbol= symbol, datapoints=datapoints, protocols= protocols)
         
+
+@app.route("/graph_data/<pool_id>")
+def graph_data(pool_id):
+    amount = int(request.args.get("amount", 1000))
+    years = int(request.args.get("years", 3))
+
+    response = requests.get("https://yields.llama.fi/pools")
+    data = response.json()
+
+    apy = 0
+    for pool in data["data"]:
+        if pool_id == pool["pool"]:
+            apy = pool["apy"]
+            name = pool["project"]
+            symbol = pool["symbol"]
+            break
+
+    datapoints = []
+    value = amount
+    for year in range(1, years+1):
+        value = value* (1 + apy / 100)
+        datapoints.append({"year": year, "value": round(value,2)})
+
+    return jsonify(datapoints)
+
+
 
 def blocks(chain):
 

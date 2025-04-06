@@ -128,6 +128,14 @@ def graph_data(pool_id):
 
 
 
+@app.route("/alert", methods=["GET", "POST"])
+def alert():
+
+    
+    return render_template("alert.html")
+
+
+
 def blocks(chain):
 
     pools = []

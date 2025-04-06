@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% block title %}
+  APY Alert
+{% endblock %}
+
+{% block main %}
+    <h2>Set your APY Alert </h2>
+
+    <label for="contact">Remind me </label>
+    <input type="text" id="contact" name="contact" placeholder="Enter Discord or Telegram" />
+
+    <label for="protocol"> when </label>
+    <input type="text" id="protocol" name="protocol" placeholder="Search for a protocol" list = "protocols" />
+    <datalist id = "protocols">
+        {% for pool in protocols %}
+        <option value="{{ pool['pool']}}">{{pool['project']}} | {{pool['symbol']}} : {{ "%.2f"|format(pool['apy']) }} %</option>
+        {% endfor %}
+    </datalist>
+
+    <label for ="condition"> APY goes</label>
+    <select id = "condition" name = "condition">
+        <option value = "above">Above</option>
+        <option value = "below">Below</option>
+    </select>
+
+    <input type ="number" name = "threshold" placeholder="Enter a value" min="0" /> %
+
+    <button type ="submit">Set Alert</button>
+{% endblock %}

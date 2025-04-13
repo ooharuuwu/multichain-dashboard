@@ -33,4 +33,17 @@ document.addEventListener("DOMContentLoaded", function () {
             })
         })
     }
+
+    const alertForm = document.querySelector('form[action="/setalert"]')
+    if (alertForm) {
+        alertForm.addEventListener("submit", function (e) {
+            const protocol = document.getElementById("protocol").value
+            const threshold = document.querySelector('input[name="threshold"]').value
+
+            if (!protocol || !threshold) {
+                e.preventDefault();
+                alert("Please select protocol and threshold")
+            }
+        })
+    }
   });

@@ -1,5 +1,7 @@
 import requests
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import discord
 import asyncio
@@ -10,11 +12,24 @@ from dotenv import load_dotenv
 
 app = Flask(__name__)
 
+app.secret_key = 'your-secret-key'
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 
+
 def init_db():
     with sqlite3.connect("apy_alerts.db") as db:
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL
+            );
+        ''')
         db.execute('''
             CREATE TABLE IF NOT EXISTS alerts (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,6 +55,70 @@ async def on_ready():
     print(f"\u2705 Logged in as {client.user}")
     client.loop.create_task(checkalerts_async())
 
+class User(UserMixin):
+    def __init__(self, id, username):
+        self.id = id
+        self.username = username
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    row = None
+    with sqlite3.connect("apy_alerts.db") as db:
+        cur = db.execute("SELECT id, username FROM users WHERE id = ?", (user_id,))
+        row = cur.fetchone()
+    if row:
+        return User(id=row[0], username=row[1])
+    return None
+
+
+
+@app.route("/login", methods = ['GET', 'POST'])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        conn = sqlite3.connect("apy_alerts.db")
+        row = conn.execute(
+            "SELECT id, username, password FROM users WHERE username = ?", (username,),
+        ).fetchone()
+        conn.close()
+        
+        if row and check_password_hash(row[2], password):
+            user = User(id = row[0], username = row[1])
+            login_user(user)
+            return redirect(url_for('index'))
+        flash("Invalid username or password", "danger")   
+        return render_template("login.html")     
+    else:
+        return render_template("login.html")
+
+
+@app.route("/register", methods = ['GET', 'POST'])
+def register():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        pw_hash = generate_password_hash(password, method="pbkdf2:sha256")
+        try:
+            with sqlite3.connect("apy_alerts.db") as db:
+                db.execute(
+                    "INSERT INTO users (username, password) VALUES (?, ?)", (username, pw_hash)
+                )
+            flash('Registration successful! Please log in.', 'success')
+            return redirect(url_for("login"))
+        except sqlite3.IntegrityError:
+            return "Username already taken", 400
+    else:
+        return render_template("register.html")
+
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for("login"))
 
 def get_pool_data():
     try:
@@ -98,6 +177,7 @@ def run_flask():
     app.run(host="0.0.0.0", port=5050, debug=False, use_reloader=False)
 
 @app.route("/", methods=["GET", "POST"])
+@login_required
 def index():
     if request.method == "POST":
         chain = request.form.get("chain").capitalize()
@@ -119,6 +199,7 @@ def index():
 
 
 @app.route("/calculate", methods=["GET", "POST"])
+@login_required
 def calculate():
 
     response = requests.get("https://yields.llama.fi/pools")
@@ -138,6 +219,7 @@ def calculate():
 
 
 @app.route("/graph/<pool_id>")
+@login_required
 def graph(pool_id):
 
     final = historical_data(pool_id)
@@ -157,6 +239,7 @@ def graph(pool_id):
 
 
 @app.route("/graph_data/<pool_id>")
+@login_required
 def graph_data(pool_id):
     amount = int(request.args.get("amount", 1000))
     years = int(request.args.get("years", 3))
@@ -181,6 +264,7 @@ def graph_data(pool_id):
 
 
 @app.route("/returns", methods = ["POST"])
+@login_required
 def returns():
     amount = int(request.form.get("amount"))
     pool_id = request.form.get("protocol")
@@ -220,12 +304,14 @@ def returns():
         
 
 @app.route("/alert")
+@login_required
 def alert():
     protocols = get_pool_data()
     protocols.sort(key=lambda p: p.get("project", "").lower())
     return render_template("alert.html", protocols=protocols)
 
 @app.route("/setalert", methods=["POST"])
+@login_required
 def setalert():
     contact = request.form["contact"]
     pool_id = request.form["protocol"]
@@ -264,7 +350,6 @@ def blocks(chain):
         
 
 def historical_data(pool_id):
-
 
     history = []
     historical = f"https://yields.llama.fi/chart/{pool_id}"
